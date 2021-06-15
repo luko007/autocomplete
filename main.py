@@ -1,5 +1,7 @@
 import redis
 from flask import Flask, request, jsonify
+import pandas as pd
+import time
 
 app = Flask(__name__)
 
@@ -10,17 +12,18 @@ numOfSuggestions = 50
 
 @app.route("/store", methods=['POST'])
 def store() -> str:
+    word = request.args.get('word')
+    storeWord(word, 0)
+    return "Success!"
+
+def storeWord(word: str, score: int):
     key = PREFIX
     pipeline = db.pipeline(True)
-    word = request.args.get('word')
     for c in word:
         key += c
-        a = db.zadd(key, {word: 0})
-        if not a:
-            return "No elements were added"
-    # db.zadd(key, TERMINAL, 0)
+        a = db.zadd(key, {word: score})
     pipeline.execute()
-    return "Success!"
+
 
 @app.route("/suggest")
 def suggest():
@@ -30,10 +33,29 @@ def suggest():
 
 def suggestWord(word):
     results = []
-    for c in db.zrange(PREFIX + word, 0, numOfSuggestions):
-        c = c.decode('UTF-8')
-        results.append(c)
+    for curr_word, score in db.zrange(PREFIX + word, 0, numOfSuggestions, withscores=True, desc=True):
+        curr_word = curr_word.decode('UTF-8')
+        results.append({curr_word: score})
     return results
 
+
+def add_words_to_db(csvFile):
+    for _, row in csvFile.iterrows():
+        storeWord(row['word'], row['count'])
+
+
+def parse_csv(csv_file_name):
+    with open(csv_file_name) as csv:
+        pandas_csv = pd.read_csv(csv)
+        pandas_csv['word'] = pandas_csv['word'].astype(str)
+        pandas_csv['count'] = pandas_csv['count'].astype(float)
+        pandas_csv.dropna(inplace=True)
+        return pandas_csv
+
+
 if __name__ == "__main__":
+    # start_time = time.time()
+    # pandas_csv_file = parse_csv("unigram_freq.csv")
+    # add_words_to_db(pandas_csv_file)
+    # print(time.time()-start_time)
     app.run()
