@@ -8,7 +8,7 @@ app = Flask(__name__)
 PREFIX = '_'
 TERMINAL = '+'
 db = redis.StrictRedis()
-numOfSuggestions = 50
+NUM_OF_SUGGESTIONS = 50
 
 @app.route("/store", methods=['POST'])
 def store() -> str:
@@ -31,11 +31,11 @@ def suggest():
     return jsonify(suggestWord(word))
 
 
-def suggestWord(word):
+def suggestWord(word, numOfSuggestions = NUM_OF_SUGGESTIONS):
     results = []
-    for curr_word, score in db.zrange(PREFIX + word, 0, numOfSuggestions, withscores=True, desc=True):
+    for curr_word in db.zrange(PREFIX + word, 0, numOfSuggestions, desc=True):
         curr_word = curr_word.decode('UTF-8')
-        results.append({curr_word: score})
+        results.append(curr_word)
     return results
 
 
