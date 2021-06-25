@@ -4,7 +4,7 @@ AutoComplete word "search" engine. Connects to redis and exposes 2 APIs (using F
 
 Suggest takes 12~ ms for receiving a word with redis containing 330K words + score.
 Storage is implemented as a variance of reverse index on redis, when all prefixes of a word is indexed as Prefix -> word.
-For example, storing "Rocky" will result in: "_R->Rocky", "_Ro->Rocky)", "_Roc->Rocky)", "_Rock->Rocky)", "_Rocky->Rocky)"
+For example, storing "Rocky" will result in: "_R->Rocky", "_Ro->Rocky", "_Roc->Rocky", "_Rock->Rocky", "_Rocky->Rocky"
 
 ## References:
 1) https://gist.github.com/emrahayanoglu/e28510026b6119bb276b4f00eb766e24
